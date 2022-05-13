@@ -4,9 +4,9 @@ class Media {
     constructor() {
         this.cloudinary = require('cloudinary');
         this.cloudinary.config({
-            cloud_name: 'mesa-clone',
-            api_key: '139729568783577',
-            api_secret: '7_rEAHSXpYRLD6_GABwMW3JQ-3A'
+            cloud_name: 'dhkwrjyxd',
+            api_key: '791477273826251',
+            api_secret: 'gsyCbIbO9QUe8dmHw8IxymRJtsk'
         });
     }
 

@@ -41,13 +41,6 @@ class Account extends Path {
 
             let err = [];
 
-            if (password.length < 6) {
-                err.push({
-                    key: "password",
-                    value: "must be of at least 6 characters"
-                })
-            }
-
             if (username.length < 4) {
                 err.push({
                     key: "username",
@@ -108,10 +101,36 @@ class Account extends Path {
             //TODO sign up
         });
 
-        this.addEntry("/login", (req, res) => {
+        this.addEntry("/login", async (req, res) => {
             let email = req.body.email;
             let password = req.body.password;
-            res.send({ email, password });
+
+            let users = await this.select({
+                select: ["*"],
+                from: ["user"],
+                where: {
+                    keys: ["email", "password"],
+                    values: [email, password],
+                    op: ["AND"]
+                }
+            });
+
+            if (users.length == 1) {
+                res.send({success:true})
+            } else {
+                res.send({
+                    err: [
+                        {
+                            key: "email",
+                            value: "invalid email/password combination"
+                        }, 
+                        {
+                            key: "password",
+                            value: "invalid email/password combination"
+                        }
+                    ]
+                })
+            }
 
             //TODO login
         });
