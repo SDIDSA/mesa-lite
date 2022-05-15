@@ -1,4 +1,9 @@
 const Path = require("./Path");
+var crypto = require('crypto');
+
+var generateKey = function () {
+    return crypto.randomBytes(16).toString('base64');
+};
 
 function isValiEmail(val) {
     let regEmail = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
@@ -19,6 +24,26 @@ class Account extends Path {
                 values: [username]
             }
         })).length > 0;
+    }
+
+    async checkSession(token) {
+        let rows = await this.select({
+            select: ["*"],
+            from: ["session"],
+            where: {
+                keys: ["token"],
+                values: [token]
+            }
+        });
+        return rows.length > 0 ? rows[0].user_id : -1;
+    }
+
+    async generateSession() {
+        let token = generateKey();
+        while ((await this.checkSession(token)) != -1) {
+            token = generateKey();
+        }
+        return token;
     }
 
     async checkEmail(email) {
@@ -73,7 +98,7 @@ class Account extends Path {
 
             if (err.length == 0) {
                 let avatar = await this.app.media.generateAvatar(username);
-                this.insert({
+                await this.insert({
                     table: "user",
                     keys: [
                         "username",
@@ -97,8 +122,6 @@ class Account extends Path {
                     err
                 })
             }
-
-            //TODO sign up
         });
 
         this.addEntry("/login", async (req, res) => {
@@ -116,14 +139,20 @@ class Account extends Path {
             });
 
             if (users.length == 1) {
-                res.send({success:true})
+                let token = await this.generateSession();
+                await this.insert({
+                    table: "session",
+                    keys: ["user_id", "token"],
+                    values: [users[0].id, token]
+                })
+                res.send({ token: token })
             } else {
                 res.send({
                     err: [
                         {
                             key: "email",
                             value: "invalid email/password combination"
-                        }, 
+                        },
                         {
                             key: "password",
                             value: "invalid email/password combination"
@@ -131,9 +160,16 @@ class Account extends Path {
                     ]
                 })
             }
-
-            //TODO login
         });
+
+        this.addEntry("/checkToken", async (req, res) => {
+            let id = await this.checkSession(req.body.token);
+            setTimeout(() => {
+                res.send({
+                    id
+                })
+            }, 1000)
+        })
     }
 }
 
