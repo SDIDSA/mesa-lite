@@ -129,7 +129,7 @@ class Account extends Path {
             let password = req.body.password;
 
             let users = await this.select({
-                select: ["*"],
+                select: ["id"],
                 from: ["user"],
                 where: {
                     keys: ["email", "password"],

@@ -14,6 +14,10 @@ class path {
         return (await this.app.db.select(data, schema));
     }
 
+    async manual(query, values) {
+        return (await this.app.db.manual(query, values));
+    }
+
     async delete(data) {
         return (await this.app.db.delete(data));
     }

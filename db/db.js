@@ -18,10 +18,10 @@ const layJoin = (cond, schema) => {
 
 const preLayWhere = (where, count) => {
     var count = { v: count ? count : 0 };
-    return laywhere(where.keys, where.values, where.op, count);
+    return laywhere(where.keys, where.values, where.op, where.comp, count);
 }
 
-const laywhere = (keys, values, op, count) => {
+const laywhere = (keys, values, op, comp, count) => {
     let res = "";
     keys.forEach((key, ind) => {
         if (ind != 0) {
@@ -29,9 +29,10 @@ const laywhere = (keys, values, op, count) => {
             res += " " + (o.forEach ? o[o.length - 1] : o) + " ";
         }
         if (key.forEach) {
-            res += "(" + laywhere(key, values[ind], op[ind], count) + ")";
+            res += "(" + laywhere(key, values[ind], op[ind], comp ? comp[ind] : comp, count) + ")";
         } else {
-            res += key + "=$" + ((count.v++) + 1);
+            console.log(count.v)
+            res += key + (comp ? comp[count.v] : "=") + "$" + ((count.v++) + 1);
         }
     });
     return res;
@@ -92,10 +93,16 @@ class db {
             query += " LIMIT " + data.limit;
         }
 
-        //console.log({ query, values: data.where ? data.where.values : [] });
 
         let res = (await this.db.query(query, data.where ? data.where.values : [])).rows;
-        //console.log(res); //DEBUG
+        console.log(res); //DEBUG
+        return res;
+    }
+
+    async manual(query, values) {
+        console.log({ query, values });
+        let res = (await this.db.query(query, values)).rows;
+        console.log(res);
         return res;
     }
 
